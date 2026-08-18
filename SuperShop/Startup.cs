@@ -31,7 +31,7 @@ namespace SuperShop
             });
             services.AddTransient<SeedDb>();//usa o objeto e nunca mais volto a usar
 
-            services.AddScoped<IRepository, Repository>();
+            services.AddScoped<IProductRepository, ProductRepository>();
             services.AddControllersWithViews();
 
         }
