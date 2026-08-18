@@ -30,7 +30,8 @@ namespace SuperShop
                 cfg.UseSqlServer(this.Configuration.GetConnectionString("DefaultConnection")); 
             });
             services.AddTransient<SeedDb>();//usa o objeto e nunca mais volto a usar
-            
+
+            services.AddScoped<IRepository, Repository>();
             services.AddControllersWithViews();
 
         }
