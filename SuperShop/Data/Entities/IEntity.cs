@@ -6,6 +6,5 @@ namespace SuperShop.Data.Entities
     {
         int Id { get; set; }
         
-
     }
 }
