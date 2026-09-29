@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -12,6 +7,13 @@ using SuperShop.Data;
 using SuperShop.Data.Entities;
 using SuperShop.Helpers;
 using SuperShop.Models;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
+using Microsoft.AspNetCore.Hosting;
 
 namespace SuperShop.Controllers
 {
@@ -19,19 +21,24 @@ namespace SuperShop.Controllers
     {
         private readonly IProductRepository _productRepository;
         private readonly IUserHelper _userHelper;
-        private readonly IImageHelper _imageHelper;
+        private readonly IBlobHelper _blobHelper;
 
         private readonly IConverterHelper _converterHelper;
+
+        private readonly IWebHostEnvironment _webHostEnvironment;
+
         public ProductsController(
             IProductRepository productRepository,
             IUserHelper userHelper,
-            IImageHelper imageHelper,
-            IConverterHelper converterHelper)
+            IBlobHelper blobHelper,
+            IConverterHelper converterHelper,
+            IWebHostEnvironment webHostEnvironment)
         {
             _productRepository = productRepository;
             _userHelper = userHelper;
-            _imageHelper = imageHelper;
+            _blobHelper = blobHelper;
             _converterHelper = converterHelper;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // GET: Products
@@ -72,18 +79,25 @@ namespace SuperShop.Controllers
         {
             if (ModelState.IsValid)
             {
-                var path = string.Empty;
+                Guid imageId = Guid.Empty;
+
 
                 if(model.ImageFile != null && model.ImageFile.Length > 0)
                 {
-                    path = await _imageHelper.UploadImageAsync(model.ImageFile, "products");
+                    imageId = Guid.NewGuid();
 
-                   
+                    // 1. Definir o caminho físico onde a imagem será guardada (wwwroot/images/products)
+                    string path = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products", $"{imageId}.jpg");
 
+                    // 2. Guardar a imagem no disco do Somee
+                    using (var stream = new FileStream(path, FileMode.Create))
+                    {
+                        await model.ImageFile.CopyToAsync(stream);
+                    }
                 }
                 
 
-                var product = _converterHelper.ToProduct(model, path, true);
+                var product = _converterHelper.ToProduct(model, imageId, true);
 
                 //TODO: Modificar para o user que tiver logado
                 product.User = await _userHelper.GetUserByEmailAsync("claudiasofia@gmail.com"); 
@@ -126,15 +140,23 @@ namespace SuperShop.Controllers
             {
                 try
                 {
-                    var path = model.ImageUrl;
+                    Guid imageId = model.ImageId; ;
                     
                     if(model.ImageFile != null && model.ImageFile.Length > 0)
                     {
-                        path = await _imageHelper.UploadImageAsync(model.ImageFile, "products");
+                        imageId = Guid.NewGuid();
 
+                        // 1. Definir o caminho físico onde a imagem será guardada
+                        string path = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products", $"{imageId}.jpg");
+
+                        // 2. Guardar a imagem no disco do Somee
+                        using (var stream = new FileStream(path, FileMode.Create))
+                        {
+                            await model.ImageFile.CopyToAsync(stream);
+                        }
                     }
 
-                    var product = _converterHelper.ToProduct (model, path, false);
+                    var product = _converterHelper.ToProduct (model, imageId, false);
 
                     //TODO: Modificar para o user que tiver logado
                     product.User = await _userHelper.GetUserByEmailAsync("claudiasofia@gmail.com");

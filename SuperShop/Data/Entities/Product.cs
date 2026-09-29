@@ -16,7 +16,7 @@ namespace SuperShop.Data.Entities
         public decimal Price { get; set; }
 
         [Display(Name ="Image")]
-        public string ImageUrl { get; set; }
+        public Guid ImageId { get; set; }
 
         [Display(Name = "Last Purchase")]
         public DateTime? LastPurchase {  get; set; }
@@ -31,17 +31,10 @@ namespace SuperShop.Data.Entities
 
         public User User { get; set; }
 
-        public string ImageFullPath
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(ImageUrl))
-                {
-                    return null;
-                }
-                return $"https://localhost:44333{ImageUrl.Substring(1)}";
-            }
-        }
+        public string ImageFullPath => ImageId == Guid.Empty
+            ? $"http://supershopclau.somee.com/images/noimage.png" :
+            $"http://supershopclau.somee.com/images//{ImageId}.png";
+
 
     }
 }

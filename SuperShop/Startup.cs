@@ -43,13 +43,13 @@ namespace SuperShop
 
             services.AddDbContext<DataContext>(cfg =>
             {
-                cfg.UseSqlServer(this.Configuration.GetConnectionString("DefaultConnection")); 
+                cfg.UseSqlServer(this.Configuration.GetConnectionString("ConnDB")); 
             });
 
             services.AddTransient<SeedDb>();//usa o objeto e nunca mais volto a usar
 
             services.AddScoped<IUserHelper, UserHelper>();
-            services.AddScoped<IImageHelper, ImageHelper>();
+            services.AddScoped<IBlobHelper, BlobHelper>();
             services.AddScoped<IConverterHelper, ConverterHelper>();
 
             services.AddScoped<IProductRepository, ProductRepository>();
