@@ -17,10 +17,9 @@ namespace SuperShop.Data.Entities
         public DateTime OrderDate { get; set; }
 
 
-        [Required]
         [Display(Name = "Delivery date")]
         [DisplayFormat(DataFormatString = "{0:yyyy/MM/dd hh:mm tt}", ApplyFormatInEditMode = false)]
-        public DateTime DeliveryDate { get; set; }
+        public DateTime? DeliveryDate { get; set; }
 
 
         [Required]
@@ -45,7 +44,12 @@ namespace SuperShop.Data.Entities
 
         [Display(Name = "Order date")]
         [DisplayFormat(DataFormatString = "{0:MM/dd/yyyy HH:mm}", ApplyFormatInEditMode = false)]
-        public DateTime? OrderDateLocal => this.OrderDate == null ? null : this.OrderDate.ToLocalTime();
+        public DateTime? OrderDateLocal =>
+#pragma warning disable CS8073 
+            this.OrderDate == null
+#pragma warning restore CS8073
+            ? null
+            : this.OrderDate.ToLocalTime();
 
     }
 }
