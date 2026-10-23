@@ -1,3 +1,6 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -13,12 +16,12 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using static System.Net.Mime.MediaTypeNames;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Authorization;
 
 namespace SuperShop.Controllers
 {
-   
+    [Route("api/[controller]")]
+    [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ProductsController : Controller
     {
         private readonly IProductRepository _productRepository;
