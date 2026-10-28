@@ -32,8 +32,8 @@ namespace SuperShop.Data.Entities
         public User User { get; set; }
 
         public string ImageFullPath => ImageId == Guid.Empty
-            ? $"http://supershopclau.somee.com/images/noimage.png" :
-            $"http://supershopclau.somee.com/images//{ImageId}.png";
+       ? "~/images/noimage.png"
+       : $"~/images/products/{ImageId}.jpg";
 
 
     }

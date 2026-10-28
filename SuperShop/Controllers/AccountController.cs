@@ -77,7 +77,7 @@ namespace SuperShop.Controllers
             var model = new RegisterNewUserViewModel
             {
                 Countries = _countryRepository.GetComboCountries(),
-                Cities = _countryRepository.GetComboCities(0),
+                Cities = _countryRepository.GetComboCities(0)
             };
 
             return View(model);
@@ -90,9 +90,7 @@ namespace SuperShop.Controllers
             {
                 var user = await _userHelper.GetUserByEmailAsync(model.Username);
                 if (user == null)
-
                 {
-
                     var city = await _countryRepository.GetCityAsync(model.CityId);
 
                     user = new User
@@ -111,32 +109,42 @@ namespace SuperShop.Controllers
                     if (result != IdentityResult.Success)
                     {
                         ModelState.AddModelError(string.Empty, "The user couldn't be created.");
-                        
+                        // Recarrega as listas antes de devolver o erro
+                        model.Countries = _countryRepository.GetComboCountries();
+                        model.Cities = _countryRepository.GetComboCities(model.CountryId);
                         return View(model);
                     }
 
                     string myToken = await _userHelper.GenerateEmailConfirmationTokenAsync(user);
                     string tokenLink = Url.Action("ConfirmEmail", "Account", new
-
                     {
                         userid = user.Id,
                         token = myToken
                     }, protocol: HttpContext.Request.Scheme);
 
                     Response response = _mailHelper.SendEmail(model.Username, "Email confirmation", $"<h1>Email Confirmation</h1>" +
-                        $"To allow the user, " +
-                        $"plase click in this link:</br></br><a href = \"{tokenLink}\">Confirm Email</a>");
+                        $"To allow the user, plase click in this link:</br></br><a href = \"{tokenLink}\">Confirm Email</a>");
 
                     if (response.IsSuccess)
                     {
-                        ViewBag.Message = "The instructions to allow you user has been sent to email";
+                        ViewBag.Message = "The instructions to allow your user have been sent to email.";
+                        model.Countries = _countryRepository.GetComboCountries();
+                        model.Cities = _countryRepository.GetComboCities(model.CountryId);
                         return View(model);
                     }
 
-                    ModelState.AddModelError(string.Empty, "The user couldn't be logged.");
-                   
+                    ModelState.AddModelError(string.Empty, "User created, but email could not be sent. Check email settings.");
+                }
+                else
+                {
+                    // Mensagem caso o email já esteja registado
+                    ModelState.AddModelError(string.Empty, "This email is already registered.");
                 }
             }
+
+            
+            model.Countries = _countryRepository.GetComboCountries();
+            model.Cities = _countryRepository.GetComboCities(model.CountryId);
             return View(model);
         }
 
@@ -303,6 +311,76 @@ namespace SuperShop.Controllers
             return View();
 
         }
+
+        public IActionResult RecoverPassword()
+        {
+            return View();
+        }
+
+
+
+        [HttpPost]
+        public async Task<IActionResult> RecoverPassword(RecoverPasswordViewModel model)
+        {
+            if (this.ModelState.IsValid)
+            {
+                var user = await _userHelper.GetUserByEmailAsync(model.Email);
+                if (user == null)
+                {
+                    ModelState.AddModelError(string.Empty, "The email doesn't correspont to a registered user.");
+                    return View(model);
+                }
+
+                var myToken = await _userHelper.GeneratePasswordResetTokenAsync(user);
+
+                var link = this.Url.Action(
+                    "ResetPassword",
+                    "Account",
+                    new { token = myToken }, protocol: HttpContext.Request.Scheme);
+
+                Response response = _mailHelper.SendEmail(model.Email, "Shop Password Reset", $"<h1>Shop Password Reset</h1>" +
+                $"To reset the password click in this link:</br></br>" +
+                $"<a href = \"{link}\">Reset Password</a>");
+
+                if (response.IsSuccess)
+                {
+                    this.ViewBag.Message = "The instructions to recover your password has been sent to email.";
+                }
+
+                return this.View();
+
+            }
+
+            return this.View(model);
+        }
+
+        public IActionResult ResetPassword(string token)
+        {
+            return View();
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            var user = await _userHelper.GetUserByEmailAsync(model.UserName);
+            if (user != null)
+            {
+                var result = await _userHelper.ResetPasswordAsync(user, model.Token, model.Password);
+                if (result.Succeeded)
+                {
+                    this.ViewBag.Message = "Password reset successful.";
+                    return View();
+                }
+
+                this.ViewBag.Message = "Error while resetting the password.";
+                return View(model);
+            }
+
+            this.ViewBag.Message = "User not found.";
+            return View(model);
+        }
+
 
 
 

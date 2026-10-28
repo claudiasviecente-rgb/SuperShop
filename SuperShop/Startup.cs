@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Vereyon.Web;
 
 namespace SuperShop
 {
@@ -63,6 +64,8 @@ namespace SuperShop
             {
                 cfg.UseSqlServer(this.Configuration.GetConnectionString("ConnDB")); 
             });
+
+            services.AddFlashMessage();
 
             services.AddTransient<SeedDb>();//usa o objeto e nunca mais volto a usar
 

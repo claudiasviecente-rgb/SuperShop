@@ -71,6 +71,7 @@ namespace SuperShop.Migrations
                         name: "FK_Cities_Countries_CountryId",
                         column: x => x.CountryId,
                         principalTable: "Countries",
+
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });

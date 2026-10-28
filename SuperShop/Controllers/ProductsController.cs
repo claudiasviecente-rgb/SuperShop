@@ -1,27 +1,18 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
-using NetTopologySuite.GeometriesGraph;
 using SuperShop.Data;
-using SuperShop.Data.Entities;
 using SuperShop.Helpers;
 using SuperShop.Models;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace SuperShop.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+
     public class ProductsController : Controller
     {
         private readonly IProductRepository _productRepository;
@@ -60,10 +51,11 @@ namespace SuperShop.Controllers
                 return new NotFoundViewResult("ProductNotFound");
             }
 
-            var product =  await _productRepository.GetByIdAsync(id.Value);
+            var product = await _productRepository.GetByIdAsync(id.Value);
             if (product == null)
-            {return new NotFoundViewResult("ProductNotFound");
-                
+            {
+                return new NotFoundViewResult("ProductNotFound");
+
             }
 
             return View(product);
@@ -80,6 +72,7 @@ namespace SuperShop.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ProductViewModel model)
         {
@@ -88,27 +81,27 @@ namespace SuperShop.Controllers
                 Guid imageId = Guid.Empty;
 
 
-                if(model.ImageFile != null && model.ImageFile.Length > 0)
+                if (model.ImageFile != null && model.ImageFile.Length > 0)
                 {
                     imageId = Guid.NewGuid();
 
-                    // 1. Definir o caminho físico onde a imagem será guardada (wwwroot/images/products)
+                    // 1. Definir o caminho físico onde a imagem será guardada
                     string path = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products", $"{imageId}.jpg");
 
-                    // 2. Guardar a imagem no disco do Somee
+                    // 2. Guardar a imagem no disco
                     using (var stream = new FileStream(path, FileMode.Create))
                     {
                         await model.ImageFile.CopyToAsync(stream);
                     }
                 }
-                
+
 
                 var product = _converterHelper.ToProduct(model, imageId, true);
 
-               
-                product.User = await _userHelper.GetUserByEmailAsync(this.User.Identity.Name); 
+
+                product.User = await _userHelper.GetUserByEmailAsync(this.User.Identity.Name);
                 await _productRepository.CreateAsync(product);
-                
+
                 return RedirectToAction(nameof(Index));
             }
             return View(model);
@@ -130,10 +123,10 @@ namespace SuperShop.Controllers
             }
 
             var model = _converterHelper.ToProductViewModel(product);
-            
+
             return View(model);
         }
-        
+
 
 
         // POST: Products/Edit/5
@@ -148,8 +141,8 @@ namespace SuperShop.Controllers
                 try
                 {
                     Guid imageId = model.ImageId; ;
-                    
-                    if(model.ImageFile != null && model.ImageFile.Length > 0)
+
+                    if (model.ImageFile != null && model.ImageFile.Length > 0)
                     {
                         imageId = Guid.NewGuid();
 
@@ -163,17 +156,17 @@ namespace SuperShop.Controllers
                         }
                     }
 
-                    var product = _converterHelper.ToProduct (model, imageId, false);
+                    var product = _converterHelper.ToProduct(model, imageId, false);
 
-                 
+
                     product.User = await _userHelper.GetUserByEmailAsync(this.User.Identity.Name);
 
                     await _productRepository.UpdateAsync(product);
-                    
+
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (! await _productRepository.ExistAsync(model.Id))
+                    if (!await _productRepository.ExistAsync(model.Id))
                     {
                         return new NotFoundViewResult("ProductNotFound");
                     }
@@ -196,8 +189,8 @@ namespace SuperShop.Controllers
                 return new NotFoundViewResult("ProductNotFound");
             }
 
-            var product =  await _productRepository.GetByIdAsync(id.Value);
-            if  (product == null)
+            var product = await _productRepository.GetByIdAsync(id.Value);
+            if (product == null)
             {
                 return new NotFoundViewResult("ProductNotFound");
             }
@@ -211,7 +204,7 @@ namespace SuperShop.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var product =  await _productRepository.GetByIdAsync(id);
+            var product = await _productRepository.GetByIdAsync(id);
             try
             {
                 //throw new Exception("Excepção de Teste");
